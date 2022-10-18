@@ -10,6 +10,6 @@
 * MongoDB
 * Mongoose
 
-https://github.com/nknrw/express-mesto-gha
+https://github.com/nknrw/express-mesto-gha-review1
 
-Андрей Никоноров, 2022.
+111, 2022.
