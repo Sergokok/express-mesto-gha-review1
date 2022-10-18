@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 /* eslint-disable import/no-unresolved */
 const express = require('express');
 const mongoose = require('mongoose');
@@ -9,6 +11,8 @@ const { createUser, login } = require('./controllers/users');
 const NotFoundError = require('./errors/not-found-err');
 const ServerError = require('./errors/server-err');
 
+const { requestLogger, errorLogger } = require('./middlewares/logger');
+
 const { PORT = 3000 } = process.env;
 
 const app = express();
@@ -17,6 +21,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.json());
+app.use(requestLogger);
+app.use(errorLogger);
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -39,6 +45,11 @@ app.use(auth);
 
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
+
+app.get('/sign-out', (req, res) => {
+  res.clearCookie('jwt');
+  res.send({ message: 'Куки удалены' });
+});
 
 app.use('*', (req, res, next) => {
   next(new NotFoundError('Запрашиваемый ресурс не найден'));
