@@ -26,31 +26,40 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  const { cardId } = req.params;
-  Card.findById(cardId)
-    .orFail(() => new NotFoundError('Карточка не найдена'))
+  Card.findById(req.params.cardId)
+    // eslint-disable-next-line consistent-return
     .then((card) => {
-      if (!card.owner.equals(req.user._id)) {
-        return next(new ForbiddenError('Нет прав на удаление карточки'));
+      if (card) {
+        if (card.owner.toString() === req.user._id) {
+          Card.findByIdAndRemove(req.params.cardId)
+            .then((deletedCard) => res.send({ deletedCard }));
+        } else {
+          return next(new ForbiddenError('Нет прав на удаление карточки'));
+        }
+      } else {
+        return next(new NotFoundError('Карточка не найдена'));
       }
-      return card.remove()
-        .then(() => res.send({ message: 'Карточка удалена' }));
     })
-    .catch(() => next(new ServerError('Произошла ошибка')));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return next(new BadRequestError('Некорректные данные id'));
+      }
+      return next(new ServerError('Произошла ошибка'));
+    });
 };
 
-// module.exports.getCard = (req, res, next) => {
+// module.exports.deleteCard = (req, res, next) => {
 //   const { cardId } = req.params;
 //   Card.findById(cardId)
-//     .orFail(() => new NotFoundError('Карточка с таким id не найдена'))
+//     .orFail(() => new NotFoundError('Карточка не найдена'))
 //     .then((card) => {
 //       if (!card.owner.equals(req.user._id)) {
-//         return next(new ForbiddenError('Нет прав на удаление чужой карточки'));
+//         return next(new ForbiddenError('Нет прав на удаление карточки'));
 //       }
 //       return card.remove()
 //         .then(() => res.send({ message: 'Карточка удалена' }));
 //     })
-//     .catch(next);
+//     .catch(() => next(new ServerError('Произошла ошибка')));
 // };
 
 // module.exports.deleteCard = async (req, res, next) => {
