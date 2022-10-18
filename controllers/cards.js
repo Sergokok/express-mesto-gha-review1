@@ -25,19 +25,33 @@ module.exports.createCard = (req, res, next) => {
     });
 };
 
-module.exports.getCard = (req, res, next) => {
+module.exports.deleteCard = (req, res, next) => {
   const { cardId } = req.params;
   Card.findById(cardId)
-    .orFail(() => new NotFoundError('Карточка с таким id не найдена'))
+    .orFail(() => new NotFoundError('Карточка не найдена'))
     .then((card) => {
       if (!card.owner.equals(req.user._id)) {
-        return next(new ForbiddenError('Нет прав на удаление чужой карточки'));
+        return next(new ForbiddenError('Нет прав на удаление карточки'));
       }
       return card.remove()
         .then(() => res.send({ message: 'Карточка удалена' }));
     })
-    .catch(next);
+    .catch(() => next(new ServerError('Произошла ошибка')));
 };
+
+// module.exports.getCard = (req, res, next) => {
+//   const { cardId } = req.params;
+//   Card.findById(cardId)
+//     .orFail(() => new NotFoundError('Карточка с таким id не найдена'))
+//     .then((card) => {
+//       if (!card.owner.equals(req.user._id)) {
+//         return next(new ForbiddenError('Нет прав на удаление чужой карточки'));
+//       }
+//       return card.remove()
+//         .then(() => res.send({ message: 'Карточка удалена' }));
+//     })
+//     .catch(next);
+// };
 
 // module.exports.deleteCard = async (req, res, next) => {
 //   try {
